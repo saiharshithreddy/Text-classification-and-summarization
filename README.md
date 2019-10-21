@@ -4,15 +4,17 @@
 Download the dataset from the given link: 
 http://mlg.ucd.ie/datasets/bbc.html
 
+## Summarization dataset  
+https://www.kaggle.com/snapcrack/all-the-news/download
 
 |Name | Text classification | Text summarization | 
 | -----| -----| ----|
 | Hetal | Naive Bayes | Text rank | |
 | Meghna | Logistic regression | Graph based algo | 
 | Sravya | Random forest/ SVM | Page rank algo | 
-| Harshith | NN model | Naive bayes & NN model |
+| Harshith | NN model | NN model |
 
-# Useful Links:
+# References:
 Text classification   
 1. https://medium.com/@robert.salgado/multiclass-text-classification-from-start-to-finish-f616a8642538
 2. https://cloud.google.com/blog/products/gcp/problem-solving-with-ml-automatic-document-classification
