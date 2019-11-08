@@ -14,6 +14,11 @@ https://www.kaggle.com/snapcrack/all-the-news/download
 | Sravya | Random forest/ SVM | Page rank algo | 
 | Harshith | NN model | NN model |
 
+## To do
+1. Data visualizations
+2. Running web scrapper
+3. Deciding on abstractive vs extractive summarization
+
 # References:
 Text classification   
 1. https://medium.com/@robert.salgado/multiclass-text-classification-from-start-to-finish-f616a8642538
