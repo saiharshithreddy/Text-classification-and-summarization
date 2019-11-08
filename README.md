@@ -15,9 +15,14 @@ https://www.kaggle.com/snapcrack/all-the-news/download
 | Harshith | NN model | NN model |
 
 ## To do
-1. Data visualizations
-2. Running web scrapper
-3. Deciding on abstractive vs extractive summarization
+1. Data visualizations (meghna, tablaeu) 
+2. Running web scrapper (everyone)
+3. Deciding on abstractive vs extractive summarization (harshith 
+4. Running the scrapper on HPC (harshith)
+5. Data preprocessing (hetal)
+6. Project report (sravya)  
+7. Significant paper report (search for research papers)
+8. Work on the summarization algos (everyone)
 
 # References:
 Text classification   
