@@ -1,37 +1,25 @@
 # Text-classification-and-summarization
 
-# Dataset:
-Download the dataset from the given link: 
-http://mlg.ucd.ie/datasets/bbc.html
+#### Text classification:
+Classifying the news articles into 4 categories namely Health, Business, Entertainment, Technology using the following ML models:  
+1. Logistic regression
+2. Support Vector Machine
+3. Naive Bayes 
+4. Random forest
+5. K-NN
 
-## Summarization dataset  
-https://www.kaggle.com/snapcrack/all-the-news/download
 
-|Name | Text classification | Text summarization | 
-| -----| -----| ----|
-| Hetal | Naive Bayes | Text rank | |
-| Meghna | Logistic regression | Graph based algo | 
-| Sravya | Random forest/ SVM | Page rank algo | 
-| Harshith | NN model | NN model |
+#### Text summarization:
+Summarize the news articles in two ways: Extractive text summarization ( selecting top sentences from the article) and Abstractive text summarization ( generating a summary).
 
-## To do
-1. Data visualizations (meghna, tablaeu) 
-2. Running web scrapper (everyone)
-3. Deciding on abstractive vs extractive summarization (harshith 
-4. Running the scrapper on HPC (harshith)
-5. Data preprocessing (hetal)
-6. Project report (sravya)  
-7. Significant paper report (search for research papers)
-8. Work on the summarization algos (everyone)
+#### Models for extractive summarization:
+1. Text rank algorithm (variation of page rank)
+2. K-means clustering
+3. Latent semantic analysis
 
-# References:
-Text classification   
-1. https://medium.com/@robert.salgado/multiclass-text-classification-from-start-to-finish-f616a8642538
-2. https://cloud.google.com/blog/products/gcp/problem-solving-with-ml-automatic-document-classification
-3. https://medium.com/mlrecipies/document-classification-using-machine-learning-f1dfb1171935
-4. https://medium.com/@ageitgey/text-classification-is-your-new-secret-weapon-7ca4fad15788
-5. https://monkeylearn.com/text-classification/
-6. https://sebastianraschka.com/Articles/2014_naive_bayes_1.html
+#### Models for abstractive summarization:
+1. Seq2Seq with attention
 
-Text summarization
-1. https://github.com/mzhao98/text-summarization/blob/master/README.md
+**Data:** Scrapped news articles from urls provided by UCI Machine Learning repository [link](http://archive.ics.uci.edu/ml/datasets/News+Aggregator)  
+For scrapping the news articles, ```Newspaper3k``` [library](https://newspaper.readthedocs.io/en/latest/) built in Python was used. The library contains ```nlp()``` method using which *keywords* and *summary* of the news article can be extracted.   
+Article's content and summary have been scrapped to create the data for the project. [Code](https://github.com/saiharshithreddy/Text-classification-and-summarization/blob/master/Data%20collection/data%20scrapper.ipynb)  
