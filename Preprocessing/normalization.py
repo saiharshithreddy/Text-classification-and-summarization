@@ -46,7 +46,6 @@ def remove_stopwords(text):
 
 
 #Function for removing special characters
-
 def remove_special_characters(text):
     pattern = re.compile('[{}]'.format(re.escape(string.punctuation)))
     filtered_tokens = filter(None, [pattern.sub('', word) for word in nltk.word_tokenize(text)])
@@ -86,9 +85,27 @@ def lemmatize_text(text):
 
 def normalize_corpus(text):
     
-    text = expand_contractions(text)
-    text = remove_stopwords(text)
-    text = remove_special_characters(text)
-    text = lemmatize_text(text)
-    
-    return text
+    normalized_text =[]
+    if(isinstance(text,list)):
+        for sentence in text:
+            sentence = expand_contractions(sentence)
+            sentence = remove_stopwords(sentence)
+            sentence = lemmatize_text(sentence)
+            sentence = remove_special_characters(sentence)
+            normalized_text.append(sentence)
+        return normalized_text
+    else:        
+        text = expand_contractions(text)
+        text = remove_stopwords(text)
+        text = lemmatize_text(text)
+        text = remove_special_characters(text)
+        return text
+
+
+def parse_content(text):
+    document=[]
+    for paragraph in text.split('\n'):
+        if paragraph!="":
+            for sent in nltk.sent_tokenize(paragraph):
+                document.append(sent)
+    return document
