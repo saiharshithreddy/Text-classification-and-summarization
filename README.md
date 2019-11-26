@@ -53,6 +53,6 @@ Raw text has unwanted characters (\n,\t,$ etc) and contains stop words (a, an, t
 | S.no | Model | Rouge-1 |
 |------|-------|----------|
 |1. | Text rank | 59.2 |
-|2. | K-means clustering|52.1 |
-|3. | Latent semantic analysis | 54.7|
+|2. | K-means clustering|54.7 |
+|3. | Latent semantic analysis | 52.1|
 
