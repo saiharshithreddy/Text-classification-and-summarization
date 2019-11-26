@@ -40,19 +40,19 @@ Raw text has unwanted characters (\n,\t,$ etc) and contains stop words (a, an, t
 ### Results
 
 #### Text classification
-| S.no | Model | Accuracy |
-|------|-------|----------|
-|1. | Logistic regression | |
-|2. | SVM | |
-|3. | Naive Bayes | |
-|4. | Random forest | |
-|5. | K-NN | |
+| S.no | Model | Accuracy in % (BoW)| Accuracy in % (Tf-idf) |
+|------|-------|----------|---------------------|
+|1. | Logistic regression | 95.2|94.7 |
+|2. | SVM |94.8 | 95.2|
+|3. | Naive Bayes | 94.69| 94.54|
+|4. | Random forest |92.2 | 92.05|
+|5. | K-NN |94.3 | 94.59|
 
 
 #### Text summarization
-| S.no | Model | Accuracy |
+| S.no | Model | Rouge-1 |
 |------|-------|----------|
-|1. | Text rank | |
-|2. | K-means clustering| |
-|3. | Latent semantic analysis | |
+|1. | Text rank | 59.2 |
+|2. | K-means clustering|52.1 |
+|3. | Latent semantic analysis | 54.7|
 
