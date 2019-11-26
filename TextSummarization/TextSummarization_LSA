@@ -1,0 +1,869 @@
+{
+ "cells": [
+  {
+   "cell_type": "code",
+   "execution_count": 1,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import pandas as pd\n",
+    "import numpy as np\n",
+    "import seaborn as sns\n",
+    "import matplotlib.pyplot as plt\n",
+    "%matplotlib inline\n",
+    "\n",
+    "from sklearn.preprocessing import LabelEncoder\n",
+    "from sklearn import preprocessing\n",
+    "from sklearn.model_selection import train_test_split\n",
+    "from sklearn.feature_extraction.text import CountVectorizer,TfidfVectorizer\n",
+    "\n",
+    "# Installing sumy library for implementing the LSA model.\n",
+    "from sumy.parsers.plaintext import PlaintextParser\n",
+    "from sumy.nlp.tokenizers import Tokenizer\n",
+    "from sumy.summarizers.lsa import LsaSummarizer\n",
+    "\n",
+    "#Ignore Future Warnings\n",
+    "from warnings import simplefilter\n",
+    "simplefilter(action='ignore', category=FutureWarning)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 2,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "(115000, 3)\n"
+     ]
+    }
+   ],
+   "source": [
+    "# Reading in the consolidated data\n",
+    "data = pd.read_pickle(\"/Users/meghnatiwari/Desktop/255_Group_Project/Myparteamproject/Text-classification-and-summarization/Data_collection/news_data.zip\")\n",
+    "print(data.shape)\n",
+    "dataset = pd.DataFrame(data)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 3,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>URL</th>\n",
+       "      <th>CATEGORY</th>\n",
+       "      <th>content and summary</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>50890</th>\n",
+       "      <td>http://blogs.wsj.com/moneybeat/2014/03/26/fed-...</td>\n",
+       "      <td>business</td>\n",
+       "      <td>[The Federal Reserve approved Ally Financial I...</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>50891</th>\n",
+       "      <td>http://cumberlink.com/news/national/duke-share...</td>\n",
+       "      <td>business</td>\n",
+       "      <td>[]</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>50892</th>\n",
+       "      <td>http://www.bizjournals.com/charlotte/blog/ener...</td>\n",
+       "      <td>business</td>\n",
+       "      <td>[]</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>50893</th>\n",
+       "      <td>http://www.ky3.com/news/local/duke-energy-shar...</td>\n",
+       "      <td>business</td>\n",
+       "      <td>[]</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>50894</th>\n",
+       "      <td>http://www.chem.info/news/2014/03/regulators-m...</td>\n",
+       "      <td>business</td>\n",
+       "      <td>[]</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "                                                     URL  CATEGORY  \\\n",
+       "50890  http://blogs.wsj.com/moneybeat/2014/03/26/fed-...  business   \n",
+       "50891  http://cumberlink.com/news/national/duke-share...  business   \n",
+       "50892  http://www.bizjournals.com/charlotte/blog/ener...  business   \n",
+       "50893  http://www.ky3.com/news/local/duke-energy-shar...  business   \n",
+       "50894  http://www.chem.info/news/2014/03/regulators-m...  business   \n",
+       "\n",
+       "                                     content and summary  \n",
+       "50890  [The Federal Reserve approved Ally Financial I...  \n",
+       "50891                                                 []  \n",
+       "50892                                                 []  \n",
+       "50893                                                 []  \n",
+       "50894                                                 []  "
+      ]
+     },
+     "execution_count": 3,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "# Drop lines that contain the Null Values\n",
+    "dataset = dataset.dropna()\n",
+    "dataset.shape\n",
+    "dataset.head()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 4,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Splitting the content and summary into 2 fields\n",
+    "dataset = dataset.loc[:,['CATEGORY','content and summary']]"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 5,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "dataset = dataset[dataset['content and summary'].map(lambda d: len(d)) > 0]"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 6,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "(37033, 2)"
+      ]
+     },
+     "execution_count": 6,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "dataset.shape"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 7,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "def get_content(row):\n",
+    "    row = row[0]\n",
+    "    return row\n",
+    "def get_summary(row):\n",
+    "    row = row[1]\n",
+    "    return row"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 8,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "dataset['content'] = dataset['content and summary'].apply(get_content)\n",
+    "dataset['summary'] = dataset['content and summary'].apply(get_summary)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 9,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>CATEGORY</th>\n",
+       "      <th>content and summary</th>\n",
+       "      <th>content</th>\n",
+       "      <th>summary</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>50890</th>\n",
+       "      <td>business</td>\n",
+       "      <td>[The Federal Reserve approved Ally Financial I...</td>\n",
+       "      <td>The Federal Reserve approved Ally Financial In...</td>\n",
+       "      <td>The Federal Reserve approved Ally Financial In...</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>50898</th>\n",
+       "      <td>business</td>\n",
+       "      <td>[— Major shareholders of Duke Energy Corp. hav...</td>\n",
+       "      <td>— Major shareholders of Duke Energy Corp. have...</td>\n",
+       "      <td>— Major shareholders of Duke Energy Corp. have...</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>50900</th>\n",
+       "      <td>business</td>\n",
+       "      <td>[Photos taken earlier this month show that Nor...</td>\n",
+       "      <td>Photos taken earlier this month show that Nort...</td>\n",
+       "      <td>Photos taken earlier this month show that Nort...</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>50903</th>\n",
+       "      <td>business</td>\n",
+       "      <td>[Thanks to dogged reporting by the Associated ...</td>\n",
+       "      <td>Thanks to dogged reporting by the Associated P...</td>\n",
+       "      <td>Thanks to dogged reporting by the Associated P...</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>50906</th>\n",
+       "      <td>business</td>\n",
+       "      <td>[The energy giant says it is committed to clea...</td>\n",
+       "      <td>The energy giant says it is committed to clean...</td>\n",
+       "      <td>The energy giant says it is committed to clean...</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "       CATEGORY                                content and summary  \\\n",
+       "50890  business  [The Federal Reserve approved Ally Financial I...   \n",
+       "50898  business  [— Major shareholders of Duke Energy Corp. hav...   \n",
+       "50900  business  [Photos taken earlier this month show that Nor...   \n",
+       "50903  business  [Thanks to dogged reporting by the Associated ...   \n",
+       "50906  business  [The energy giant says it is committed to clea...   \n",
+       "\n",
+       "                                                 content  \\\n",
+       "50890  The Federal Reserve approved Ally Financial In...   \n",
+       "50898  — Major shareholders of Duke Energy Corp. have...   \n",
+       "50900  Photos taken earlier this month show that Nort...   \n",
+       "50903  Thanks to dogged reporting by the Associated P...   \n",
+       "50906  The energy giant says it is committed to clean...   \n",
+       "\n",
+       "                                                 summary  \n",
+       "50890  The Federal Reserve approved Ally Financial In...  \n",
+       "50898  — Major shareholders of Duke Energy Corp. have...  \n",
+       "50900  Photos taken earlier this month show that Nort...  \n",
+       "50903  Thanks to dogged reporting by the Associated P...  \n",
+       "50906  The energy giant says it is committed to clean...  "
+      ]
+     },
+     "execution_count": 9,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "dataset.head()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 10,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "dataset.drop(['content and summary','summary'],axis=1, inplace=True)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 11,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>CATEGORY</th>\n",
+       "      <th>content</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>50890</th>\n",
+       "      <td>business</td>\n",
+       "      <td>The Federal Reserve approved Ally Financial In...</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>50898</th>\n",
+       "      <td>business</td>\n",
+       "      <td>— Major shareholders of Duke Energy Corp. have...</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>50900</th>\n",
+       "      <td>business</td>\n",
+       "      <td>Photos taken earlier this month show that Nort...</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>50903</th>\n",
+       "      <td>business</td>\n",
+       "      <td>Thanks to dogged reporting by the Associated P...</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>50906</th>\n",
+       "      <td>business</td>\n",
+       "      <td>The energy giant says it is committed to clean...</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "       CATEGORY                                            content\n",
+       "50890  business  The Federal Reserve approved Ally Financial In...\n",
+       "50898  business  — Major shareholders of Duke Energy Corp. have...\n",
+       "50900  business  Photos taken earlier this month show that Nort...\n",
+       "50903  business  Thanks to dogged reporting by the Associated P...\n",
+       "50906  business  The energy giant says it is committed to clean..."
+      ]
+     },
+     "execution_count": 11,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "dataset.head()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 12,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "dataset = dataset.rename(columns= {'CATEGORY':'category'})"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 13,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>category</th>\n",
+       "      <th>content</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>50890</th>\n",
+       "      <td>business</td>\n",
+       "      <td>The Federal Reserve approved Ally Financial In...</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>50898</th>\n",
+       "      <td>business</td>\n",
+       "      <td>— Major shareholders of Duke Energy Corp. have...</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>50900</th>\n",
+       "      <td>business</td>\n",
+       "      <td>Photos taken earlier this month show that Nort...</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>50903</th>\n",
+       "      <td>business</td>\n",
+       "      <td>Thanks to dogged reporting by the Associated P...</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>50906</th>\n",
+       "      <td>business</td>\n",
+       "      <td>The energy giant says it is committed to clean...</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "       category                                            content\n",
+       "50890  business  The Federal Reserve approved Ally Financial In...\n",
+       "50898  business  — Major shareholders of Duke Energy Corp. have...\n",
+       "50900  business  Photos taken earlier this month show that Nort...\n",
+       "50903  business  Thanks to dogged reporting by the Associated P...\n",
+       "50906  business  The energy giant says it is committed to clean..."
+      ]
+     },
+     "execution_count": 13,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "dataset.head()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 15,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Pre processing the data like removing stop words and white spaces.\n",
+    "from gensim import utils\n",
+    "import gensim.parsing.preprocessing as gsp\n",
+    "\n",
+    "filters = [\n",
+    "           gsp.strip_tags, \n",
+    "#            gsp.strip_punctuation,\n",
+    "           gsp.strip_multiple_whitespaces,\n",
+    "           gsp.remove_stopwords ,\n",
+    "           gsp.strip_short,\n",
+    "           gsp.stem_text\n",
+    "          ]\n",
+    "\n",
+    "def clean_text(dataset):\n",
+    "    dataset = dataset.lower()\n",
+    "    dataset = utils.to_unicode(dataset)\n",
+    "    for f in filters:\n",
+    "        dataset = f(dataset)\n",
+    "    return dataset"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 16,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>category</th>\n",
+       "      <th>content</th>\n",
+       "      <th>clean_text</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>50890</th>\n",
+       "      <td>business</td>\n",
+       "      <td>The Federal Reserve approved Ally Financial In...</td>\n",
+       "      <td>feder reserv approv alli financi inc.’ capit p...</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>50898</th>\n",
+       "      <td>business</td>\n",
+       "      <td>— Major shareholders of Duke Energy Corp. have...</td>\n",
+       "      <td>major sharehold duke energi corp. call company...</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>50900</th>\n",
+       "      <td>business</td>\n",
+       "      <td>Photos taken earlier this month show that Nort...</td>\n",
+       "      <td>photo taken earlier month north carolina regul...</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>50903</th>\n",
+       "      <td>business</td>\n",
+       "      <td>Thanks to dogged reporting by the Associated P...</td>\n",
+       "      <td>thank dog report associ press, know activ duke...</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>50906</th>\n",
+       "      <td>business</td>\n",
+       "      <td>The energy giant says it is committed to clean...</td>\n",
+       "      <td>energi giant sai commit clean dan river spill ...</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "       category                                            content  \\\n",
+       "50890  business  The Federal Reserve approved Ally Financial In...   \n",
+       "50898  business  — Major shareholders of Duke Energy Corp. have...   \n",
+       "50900  business  Photos taken earlier this month show that Nort...   \n",
+       "50903  business  Thanks to dogged reporting by the Associated P...   \n",
+       "50906  business  The energy giant says it is committed to clean...   \n",
+       "\n",
+       "                                              clean_text  \n",
+       "50890  feder reserv approv alli financi inc.’ capit p...  \n",
+       "50898  major sharehold duke energi corp. call company...  \n",
+       "50900  photo taken earlier month north carolina regul...  \n",
+       "50903  thank dog report associ press, know activ duke...  \n",
+       "50906  energi giant sai commit clean dan river spill ...  "
+      ]
+     },
+     "execution_count": 16,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "dataset[\"clean_text\"] = dataset[\"content\"].apply(clean_text)\n",
+    "dataset.head()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 17,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# label_encoder = LabelEncoder() \n",
+    "# dataset['category']= label_encoder.fit_transform(dataset['category'])\n",
+    "# dataset.sample(5)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Summarization using gensim "
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 18,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>category</th>\n",
+       "      <th>content</th>\n",
+       "      <th>clean_text</th>\n",
+       "      <th>Summary</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>50890</th>\n",
+       "      <td>business</td>\n",
+       "      <td>The Federal Reserve approved Ally Financial In...</td>\n",
+       "      <td>feder reserv approv alli financi inc.’ capit p...</td>\n",
+       "      <td></td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>50898</th>\n",
+       "      <td>business</td>\n",
+       "      <td>— Major shareholders of Duke Energy Corp. have...</td>\n",
+       "      <td>major sharehold duke energi corp. call company...</td>\n",
+       "      <td></td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>50900</th>\n",
+       "      <td>business</td>\n",
+       "      <td>Photos taken earlier this month show that Nort...</td>\n",
+       "      <td>photo taken earlier month north carolina regul...</td>\n",
+       "      <td></td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>50903</th>\n",
+       "      <td>business</td>\n",
+       "      <td>Thanks to dogged reporting by the Associated P...</td>\n",
+       "      <td>thank dog report associ press, know activ duke...</td>\n",
+       "      <td></td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>50906</th>\n",
+       "      <td>business</td>\n",
+       "      <td>The energy giant says it is committed to clean...</td>\n",
+       "      <td>energi giant sai commit clean dan river spill ...</td>\n",
+       "      <td></td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "       category                                            content  \\\n",
+       "50890  business  The Federal Reserve approved Ally Financial In...   \n",
+       "50898  business  — Major shareholders of Duke Energy Corp. have...   \n",
+       "50900  business  Photos taken earlier this month show that Nort...   \n",
+       "50903  business  Thanks to dogged reporting by the Associated P...   \n",
+       "50906  business  The energy giant says it is committed to clean...   \n",
+       "\n",
+       "                                              clean_text Summary  \n",
+       "50890  feder reserv approv alli financi inc.’ capit p...          \n",
+       "50898  major sharehold duke energi corp. call company...          \n",
+       "50900  photo taken earlier month north carolina regul...          \n",
+       "50903  thank dog report associ press, know activ duke...          \n",
+       "50906  energi giant sai commit clean dan river spill ...          "
+      ]
+     },
+     "execution_count": 18,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "dataset[\"Summary\"] = \"\"\n",
+    "dataset.head()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 19,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "pd.options.mode.chained_assignment = None\n",
+    "for i,j in dataset.iterrows():\n",
+    "    parser = PlaintextParser.from_string(j.clean_text,Tokenizer(\"english\"))\n",
+    "    summarizer_lsa = LsaSummarizer()\n",
+    "    summary2 = summarizer_lsa(parser.document,5)\n",
+    "    for sentence in summary2:\n",
+    "        dataset.Summary[i] = sentence"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 20,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>category</th>\n",
+       "      <th>content</th>\n",
+       "      <th>clean_text</th>\n",
+       "      <th>Summary</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>50890</th>\n",
+       "      <td>business</td>\n",
+       "      <td>The Federal Reserve approved Ally Financial In...</td>\n",
+       "      <td>feder reserv approv alli financi inc.’ capit p...</td>\n",
+       "      <td>ally’ plan approv feder reserv bank lend sever...</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>50898</th>\n",
+       "      <td>business</td>\n",
+       "      <td>— Major shareholders of Duke Energy Corp. have...</td>\n",
+       "      <td>major sharehold duke energi corp. call company...</td>\n",
+       "      <td>want list recommend ensur compani complianc cu...</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>50900</th>\n",
+       "      <td>business</td>\n",
+       "      <td>Photos taken earlier this month show that Nort...</td>\n",
+       "      <td>photo taken earlier month north carolina regul...</td>\n",
+       "      <td>public simpli longer trust denr compet investi...</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>50903</th>\n",
+       "      <td>business</td>\n",
+       "      <td>Thanks to dogged reporting by the Associated P...</td>\n",
+       "      <td>thank dog report associ press, know activ duke...</td>\n",
+       "      <td>tar heel ought justifi outrag lobbyist allow p...</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>50906</th>\n",
+       "      <td>business</td>\n",
+       "      <td>The energy giant says it is committed to clean...</td>\n",
+       "      <td>energi giant sai commit clean dan river spill ...</td>\n",
+       "      <td>\"if issu need addressed, we’ll care immediatel...</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "       category                                            content  \\\n",
+       "50890  business  The Federal Reserve approved Ally Financial In...   \n",
+       "50898  business  — Major shareholders of Duke Energy Corp. have...   \n",
+       "50900  business  Photos taken earlier this month show that Nort...   \n",
+       "50903  business  Thanks to dogged reporting by the Associated P...   \n",
+       "50906  business  The energy giant says it is committed to clean...   \n",
+       "\n",
+       "                                              clean_text  \\\n",
+       "50890  feder reserv approv alli financi inc.’ capit p...   \n",
+       "50898  major sharehold duke energi corp. call company...   \n",
+       "50900  photo taken earlier month north carolina regul...   \n",
+       "50903  thank dog report associ press, know activ duke...   \n",
+       "50906  energi giant sai commit clean dan river spill ...   \n",
+       "\n",
+       "                                                 Summary  \n",
+       "50890  ally’ plan approv feder reserv bank lend sever...  \n",
+       "50898  want list recommend ensur compani complianc cu...  \n",
+       "50900  public simpli longer trust denr compet investi...  \n",
+       "50903  tar heel ought justifi outrag lobbyist allow p...  \n",
+       "50906  \"if issu need addressed, we’ll care immediatel...  "
+      ]
+     },
+     "execution_count": 20,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "# The Field Summary contains the 5 line summary of each content\n",
+    "dataset.head()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": []
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.7.3"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 2
+}
