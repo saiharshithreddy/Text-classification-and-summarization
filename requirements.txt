@@ -1,0 +1,7 @@
+pandas
+numpy
+newspaper3k
+nltk=3.4.5
+sklearn
+matplotlib
+seaborn
